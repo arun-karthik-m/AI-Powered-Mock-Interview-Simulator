@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Sparkles, Star, TrendingUp, AlertCircle } from 'lucide-react';
+import { Sparkles, Star, TrendingUp, AlertCircle, BarChart2, MessageCircle, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 interface FeedbackItem {
   type: 'strength' | 'improvement' | 'suggestion';
@@ -11,7 +12,9 @@ interface FeedbackScores {
   clarity: number;
   relevance: number;
   confidence: number;
+  grammar: number;
   overall: number;
+  sentiment: 'positive' | 'neutral' | 'negative';
 }
 
 interface FeedbackPanelProps {
@@ -24,6 +27,32 @@ const FeedbackPanel: React.FC<FeedbackPanelProps> = ({ feedback, scores }) => {
     if (score >= 8) return 'text-interview-success';
     if (score >= 6) return 'text-interview-warning';
     return 'text-interview-error';
+  };
+
+  const getSentimentIcon = () => {
+    switch (scores.sentiment) {
+      case 'positive':
+        return <CheckCircle2 className="h-5 w-5 text-interview-success" />;
+      case 'neutral':
+        return <AlertTriangle className="h-5 w-5 text-interview-warning" />;
+      case 'negative':
+        return <XCircle className="h-5 w-5 text-interview-error" />;
+      default:
+        return <MessageCircle className="h-5 w-5 text-interview-blue" />;
+    }
+  };
+
+  const getSentimentText = () => {
+    switch (scores.sentiment) {
+      case 'positive':
+        return 'Confident and positive tone';
+      case 'neutral':
+        return 'Neutral tone';
+      case 'negative':
+        return 'Signs of hesitation or uncertainty';
+      default:
+        return 'Unable to analyze sentiment';
+    }
   };
 
   return (
@@ -40,24 +69,79 @@ const FeedbackPanel: React.FC<FeedbackPanelProps> = ({ feedback, scores }) => {
         </div>
       </div>
       
-      <div className="mb-6">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3">Performance Metrics</h4>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="glass-morphism p-3 rounded-lg text-center">
-            <p className="text-xs text-gray-600 mb-1">Clarity</p>
-            <p className={`text-xl font-bold ${getScoreColor(scores.clarity)}`}>{scores.clarity}/10</p>
+      <div className="mb-8">
+        <h4 className="text-sm font-semibold text-gray-700 mb-4">Performance Metrics</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Clarity</span>
+                <span className={`text-sm font-semibold ${getScoreColor(scores.clarity)}`}>{scores.clarity}/10</span>
+              </div>
+              <Progress value={scores.clarity * 10} className="h-2" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Relevance</span>
+                <span className={`text-sm font-semibold ${getScoreColor(scores.relevance)}`}>{scores.relevance}/10</span>
+              </div>
+              <Progress value={scores.relevance * 10} className="h-2" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Confidence</span>
+                <span className={`text-sm font-semibold ${getScoreColor(scores.confidence)}`}>{scores.confidence}/10</span>
+              </div>
+              <Progress value={scores.confidence * 10} className="h-2" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Grammar</span>
+                <span className={`text-sm font-semibold ${getScoreColor(scores.grammar)}`}>{scores.grammar}/10</span>
+              </div>
+              <Progress value={scores.grammar * 10} className="h-2" />
+            </div>
           </div>
-          <div className="glass-morphism p-3 rounded-lg text-center">
-            <p className="text-xs text-gray-600 mb-1">Relevance</p>
-            <p className={`text-xl font-bold ${getScoreColor(scores.relevance)}`}>{scores.relevance}/10</p>
-          </div>
-          <div className="glass-morphism p-3 rounded-lg text-center">
-            <p className="text-xs text-gray-600 mb-1">Confidence</p>
-            <p className={`text-xl font-bold ${getScoreColor(scores.confidence)}`}>{scores.confidence}/10</p>
-          </div>
-          <div className="glass-morphism p-3 rounded-lg text-center bg-interview-blue/5">
-            <p className="text-xs text-gray-600 mb-1">Overall</p>
-            <p className={`text-xl font-bold ${getScoreColor(scores.overall)}`}>{scores.overall}/10</p>
+          
+          <div className="glass-morphism p-6 rounded-xl bg-interview-blue/5 flex flex-col justify-center">
+            <div className="mb-4 flex items-center">
+              <BarChart2 className="h-5 w-5 text-interview-blue mr-2" />
+              <h4 className="text-sm font-semibold text-gray-700">Overall Score</h4>
+            </div>
+            <div className="text-center">
+              <div className="relative inline-flex">
+                <svg className="w-32 h-32">
+                  <circle
+                    className="text-gray-200"
+                    strokeWidth="6"
+                    stroke="currentColor"
+                    fill="transparent"
+                    r="58"
+                    cx="64"
+                    cy="64"
+                  />
+                  <circle
+                    className={`${scores.overall >= 80 ? 'text-interview-success' : scores.overall >= 60 ? 'text-interview-warning' : 'text-interview-error'}`}
+                    strokeWidth="6"
+                    strokeDasharray={360}
+                    strokeDashoffset={360 - (360 * scores.overall) / 100}
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    fill="transparent"
+                    r="58"
+                    cx="64"
+                    cy="64"
+                  />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-gray-800">
+                  {scores.overall}
+                </span>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-center">
+              {getSentimentIcon()}
+              <span className="ml-2 text-sm text-gray-600">{getSentimentText()}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -66,7 +150,7 @@ const FeedbackPanel: React.FC<FeedbackPanelProps> = ({ feedback, scores }) => {
         <h4 className="text-sm font-semibold text-gray-700">Detailed Feedback</h4>
         
         {feedback.map((item, index) => (
-          <div key={index} className="glass-morphism p-4 rounded-lg">
+          <div key={index} className="glass-morphism p-4 rounded-lg hover:shadow-md transition-shadow duration-200">
             <div className="flex items-start">
               <div className="flex-shrink-0 mt-1">
                 {item.type === 'strength' && <Star className="h-5 w-5 text-interview-success" />}

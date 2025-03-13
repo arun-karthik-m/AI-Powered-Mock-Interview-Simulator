@@ -10,8 +10,11 @@ import {
   BarChart3, 
   ArrowUpRight, 
   Check, 
-  AlertTriangle 
+  AlertTriangle,
+  Share2
 } from 'lucide-react';
+import { generatePdfReport } from '@/utils/pdfGenerator';
+import { useToast } from '@/components/ui/use-toast';
 
 interface ReportData {
   strengths: string[];
@@ -30,6 +33,7 @@ interface LocationState {
 const Report = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const state = location.state as LocationState;
   
   if (!state || !state.report) {
@@ -57,9 +61,57 @@ const Report = () => {
     return 'text-interview-error';
   };
   
+  const getScoreBadge = (score: number) => {
+    if (score >= 90) return 'Excellent';
+    if (score >= 80) return 'Very Good';
+    if (score >= 70) return 'Good';
+    if (score >= 60) return 'Satisfactory';
+    return 'Needs Improvement';
+  };
+  
+  const getScoreBadgeColor = (score: number) => {
+    if (score >= 90) return 'bg-green-100 text-green-800 border-green-200';
+    if (score >= 80) return 'bg-blue-100 text-blue-800 border-blue-200';
+    if (score >= 70) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    if (score >= 60) return 'bg-orange-100 text-orange-800 border-orange-200';
+    return 'bg-red-100 text-red-800 border-red-200';
+  };
+  
   const handleDownloadReport = () => {
-    // In a real app, this would generate a PDF report
-    alert('Download report functionality would be implemented here');
+    // Generate and download PDF report
+    generatePdfReport({
+      jobRole,
+      interviewDate: report.interviewDate,
+      overallScore: report.overallScore,
+      strengths: report.strengths,
+      improvements: report.improvements,
+      questions,
+      answers
+    });
+    
+    // Show toast notification
+    toast({
+      title: "Report Downloaded",
+      description: "Your interview report has been successfully downloaded.",
+      duration: 3000,
+    });
+  };
+  
+  const handleShareReport = () => {
+    // Create sharable link or copy report summary to clipboard
+    // For demo, we'll just copy a summary to clipboard
+    const summary = `Interview Report for ${jobRole}:\n` +
+      `Overall Score: ${report.overallScore}/100\n` +
+      `Key Strengths: ${report.strengths.join(', ')}\n` +
+      `Areas for Improvement: ${report.improvements.join(', ')}`;
+      
+    navigator.clipboard.writeText(summary);
+    
+    toast({
+      title: "Report Summary Copied",
+      description: "A summary of your report has been copied to clipboard.",
+      duration: 3000,
+    });
   };
   
   return (
@@ -84,16 +136,40 @@ const Report = () => {
             
             <div className="flex justify-center mb-10">
               <div className="text-center">
+                <div className="mb-2">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getScoreBadgeColor(report.overallScore)}`}>
+                    {getScoreBadge(report.overallScore)}
+                  </span>
+                </div>
                 <div className="text-5xl font-bold mb-2 leading-none">
                   <span className={getScoreColor(report.overallScore)}>{report.overallScore}</span>
                   <span className="text-gray-400">/100</span>
                 </div>
                 <p className="text-sm text-gray-600">Overall Score</p>
+                
+                {/* Visual score meter */}
+                <div className="mt-4 w-full max-w-xs mx-auto">
+                  <div className="h-2 bg-gray-200 rounded-full">
+                    <div 
+                      className={`h-2 rounded-full ${
+                        report.overallScore >= 90 ? 'bg-interview-success' : 
+                        report.overallScore >= 75 ? 'bg-interview-warning' : 
+                        'bg-interview-error'
+                      }`}
+                      style={{ width: `${report.overallScore}%` }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>0</span>
+                    <span>50</span>
+                    <span>100</span>
+                  </div>
+                </div>
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              <div className="glass-morphism p-6 rounded-xl">
+              <div className="glass-morphism p-6 rounded-xl hover:shadow-md transition-shadow duration-200">
                 <div className="flex items-center mb-4">
                   <Check className="h-5 w-5 text-interview-success mr-2" />
                   <h3 className="text-lg font-semibold text-gray-900">Strengths</h3>
@@ -110,7 +186,7 @@ const Report = () => {
                 </ul>
               </div>
               
-              <div className="glass-morphism p-6 rounded-xl">
+              <div className="glass-morphism p-6 rounded-xl hover:shadow-md transition-shadow duration-200">
                 <div className="flex items-center mb-4">
                   <TrendingUp className="h-5 w-5 text-interview-warning mr-2" />
                   <h3 className="text-lg font-semibold text-gray-900">Areas for Improvement</h3>
@@ -128,7 +204,7 @@ const Report = () => {
               </div>
             </div>
             
-            <div className="glass-morphism p-6 rounded-xl mb-8">
+            <div className="glass-morphism p-6 rounded-xl mb-8 hover:shadow-md transition-shadow duration-200">
               <div className="flex items-center mb-4">
                 <BarChart3 className="h-5 w-5 text-interview-blue mr-2" />
                 <h3 className="text-lg font-semibold text-gray-900">Question Summary</h3>
@@ -138,6 +214,21 @@ const Report = () => {
                   <div key={index} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
                     <p className="text-sm font-medium text-gray-900 mb-1">Q{index + 1}: {question}</p>
                     <p className="text-sm text-gray-600 line-clamp-2">{answers[index]}</p>
+                    <button 
+                      className="text-xs text-interview-blue mt-1 hover:underline focus:outline-none"
+                      onClick={() => {
+                        const element = document.getElementById(`answer-${index}`);
+                        if (element) {
+                          if (element.classList.contains('line-clamp-2')) {
+                            element.classList.remove('line-clamp-2');
+                          } else {
+                            element.classList.add('line-clamp-2');
+                          }
+                        }
+                      }}
+                    >
+                      Show {document.getElementById(`answer-${index}`)?.classList.contains('line-clamp-2') ? 'more' : 'less'}
+                    </button>
                   </div>
                 ))}
               </div>
@@ -145,7 +236,7 @@ const Report = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
-                className="bg-interview-blue hover:bg-interview-blue/90 text-white font-medium px-6 py-3 rounded-lg shadow-button"
+                className="bg-interview-blue hover:bg-interview-blue/90 text-white font-medium px-6 py-3 rounded-lg shadow-button transition-all duration-200 hover:translate-y-[-2px]"
                 onClick={handleDownloadReport}
               >
                 <Download className="mr-2 h-4 w-4" />
@@ -153,7 +244,15 @@ const Report = () => {
               </Button>
               <Button 
                 variant="outline" 
-                className="border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-6 py-3 rounded-lg"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-6 py-3 rounded-lg transition-all duration-200 hover:translate-y-[-2px]"
+                onClick={handleShareReport}
+              >
+                <Share2 className="mr-2 h-4 w-4 text-interview-blue" />
+                Share Report
+              </Button>
+              <Button 
+                variant="outline" 
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-6 py-3 rounded-lg transition-all duration-200 hover:translate-y-[-2px]"
                 onClick={() => navigate('/setup')}
               >
                 <ArrowUpRight className="mr-2 h-4 w-4 text-interview-blue" />
