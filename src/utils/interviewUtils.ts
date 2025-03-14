@@ -1,3 +1,4 @@
+
 import { faker } from '@faker-js/faker';
 
 // Mock job roles
@@ -27,6 +28,33 @@ export async function getQuestions(roleId: number, resumeText: string = ''): Pro
   );
   
   return questions;
+}
+
+// Mock function to extract text from resume
+export async function extractResumeText(file: File): Promise<string> {
+  // In a real app, this would process the file and extract text
+  // For now, we'll just return a mock result
+  console.log("Extracting text from resume:", file.name);
+  
+  // Simulate delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Return mock extracted text
+  return `
+    PROFESSIONAL EXPERIENCE
+    
+    Software Engineer
+    ABC Technologies, Inc.
+    2020 - Present
+    • Developed and maintained web applications using React and TypeScript
+    • Worked on backend APIs with Node.js and Express
+    • Implemented CI/CD pipelines using GitHub Actions
+    
+    Education
+    Bachelor of Science in Computer Science
+    University of Technology
+    2016 - 2020
+  `;
 }
 
 // Mock generate feedback
