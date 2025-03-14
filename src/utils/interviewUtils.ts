@@ -1,301 +1,94 @@
-import { supabase } from './supabase';
-import { analyzeResponse, generateQuestionsFromResume } from './openAiService';
+import { faker } from '@faker-js/faker';
 
-// Sample data for the interview simulator
-// In a real app, this would be fetched from an API
-
-// Job role data
+// Mock job roles
 export const jobRoles = [
-  { id: 1, title: 'Software Developer', level: 'Entry Level' },
-  { id: 2, title: 'Software Developer', level: 'Mid Level' },
-  { id: 3, title: 'Software Developer', level: 'Senior Level' },
-  { id: 4, title: 'Product Manager', level: 'Entry Level' },
-  { id: 5, title: 'Product Manager', level: 'Mid Level' },
-  { id: 6, title: 'Product Manager', level: 'Senior Level' },
+  { id: 1, title: 'Software Engineer', level: 'Entry Level' },
+  { id: 2, title: 'Data Scientist', level: 'Mid Level' },
+  { id: 3, title: 'Product Manager', level: 'Senior Level' },
+  { id: 4, title: 'Frontend Developer', level: 'Entry Level' },
+  { id: 5, title: 'Backend Developer', level: 'Mid Level' },
+  { id: 6, title: 'Data Analyst', level: 'Senior Level' },
   { id: 7, title: 'UX Designer', level: 'Entry Level' },
-  { id: 8, title: 'UX Designer', level: 'Mid Level' },
-  { id: 9, title: 'UX Designer', level: 'Senior Level' },
-  { id: 10, title: 'Data Scientist', level: 'Entry Level' },
-  { id: 11, title: 'Data Scientist', level: 'Mid Level' },
-  { id: 12, title: 'Data Scientist', level: 'Senior Level' },
+  { id: 8, title: 'Project Manager', level: 'Mid Level' },
+  { id: 9, title: 'DevOps Engineer', level: 'Senior Level' },
+  { id: 10, title: 'QA Engineer', level: 'Entry Level' },
 ];
 
-// Sample questions bank
-const questionsBank = {
-  // Software Developer Questions
-  1: [
-    'Tell me about your programming experience and the languages you are most comfortable with.',
-    'Explain a project you worked on and the technologies you used.',
-    'How do you approach debugging a complex problem?',
-    'What development methodologies are you familiar with?',
-    'How do you stay updated with the latest technologies and programming practices?'
-  ],
-  2: [
-    'Describe a challenging technical problem you solved recently.',
-    'How do you ensure code quality in your projects?',
-    'Explain your experience with version control systems.',
-    'Tell me about your experience with code reviews and collaboration.',
-    'How do you handle technical disagreements with team members?'
-  ],
-  3: [
-    'Describe your experience leading development teams or mentoring junior developers.',
-    'How do you approach system architecture decisions?',
-    'Tell me about a time when you improved a significant aspect of a codebase.',
-    'How do you balance technical debt with new feature development?',
-    'Explain how you evaluate new technologies for potential adoption.'
-  ],
-  // Product Manager Questions
-  4: [
-    'What interests you about product management?',
-    'How do you understand user needs?',
-    'Describe your experience working with development teams.',
-    'How do you prioritize features?',
-    'Tell me about a product you admire and why.'
-  ],
-  // Add more questions for other roles...
-  // Default questions if role not found
-  default: [
-    'Tell me about yourself and your background.',
-    'Why are you interested in this role?',
-    'What are your greatest professional strengths?',
-    'What do you consider to be your weaknesses?',
-    'Where do you see yourself in 5 years?'
-  ]
-};
-
-// Get questions from questions bank or generate them if resume is provided
-export const getQuestions = async (roleId: number, resumeText?: string): Promise<string[]> => {
-  // If resume is provided, generate custom questions
-  if (resumeText) {
-    try {
-      const role = jobRoles.find(r => r.id === roleId);
-      if (!role) throw new Error('Role not found');
-      
-      const generatedQuestions = await generateQuestionsFromResume(
-        resumeText,
-        role.title,
-        role.level
-      );
-      
-      if (generatedQuestions.length >= 5) {
-        return generatedQuestions.slice(0, 5);
-      }
-      
-      // If not enough generated questions, merge with default questions
-      const defaultQuestions = questionsBank[roleId as keyof typeof questionsBank] || questionsBank.default;
-      return [...generatedQuestions, ...defaultQuestions].slice(0, 5);
-    } catch (error) {
-      console.error('Error generating questions from resume:', error);
-    }
-  }
+// Mock function to generate questions based on role and resume
+export async function getQuestions(roleId: number, resumeText: string = ''): Promise<string[]> {
+  console.log("Generating questions for role:", roleId, "with resume:", resumeText ? 'Yes' : 'No');
   
-  // Return pre-defined questions if no resume or error
-  return questionsBank[roleId as keyof typeof questionsBank] || questionsBank.default;
-};
-
-// Generate feedback using AI analysis
-export const generateFeedback = async (question: string, answer: string, roleId: number) => {
-  try {
-    const role = jobRoles.find(r => r.id === roleId);
-    if (!role) throw new Error('Role not found');
-    
-    const jobRoleTitle = `${role.title} - ${role.level}`;
-    
-    // Get AI-generated analysis
-    const analysis = await analyzeResponse(question, answer, jobRoleTitle);
-    
-    // Format feedback items
-    const feedbackItems = [
-      ...analysis.strengths.map(content => ({ 
-        type: 'strength' as const, 
-        content 
-      })),
-      ...analysis.improvements.map(content => ({ 
-        type: 'improvement' as const, 
-        content 
-      })),
-      ...analysis.suggestions.map(content => ({ 
-        type: 'suggestion' as const, 
-        content 
-      }))
-    ];
-    
-    // Create scores object
-    const scores = {
-      clarity: analysis.clarity,
-      relevance: analysis.relevance,
-      confidence: analysis.confidence,
-      grammar: analysis.grammar,
-      overall: analysis.overallScore,
-      sentiment: analysis.sentiment
-    };
-    
-    // Save interview feedback to Supabase if needed
-    // await supabase.from('interview_feedback').insert({ question, answer, feedback: feedbackItems, scores });
-    
-    return {
-      feedback: feedbackItems,
-      scores
-    };
-  } catch (error) {
-    console.error('Error generating feedback:', error);
-    
-    // Return fallback feedback if AI analysis fails
-    return {
-      feedback: [
-        {
-          type: 'strength',
-          content: 'You provided a response to the question.'
-        },
-        {
-          type: 'improvement',
-          content: 'Consider adding more specific examples to strengthen your answer.'
-        },
-        {
-          type: 'suggestion',
-          content: 'Structure your response using the STAR method (Situation, Task, Action, Result).'
-        }
-      ],
-      scores: {
-        clarity: 7,
-        relevance: 7,
-        confidence: 7,
-        grammar: 8,
-        overall: 75,
-        sentiment: 'neutral'
-      }
-    };
-  }
-};
-
-// Generate final report after interview
-export const generateReport = async (questions: string[], answers: string[], roleId: number) => {
-  // For a real implementation, this would use AI to analyze all answers collectively
+  // Simulate delay
+  await new Promise(resolve => setTimeout(resolve, 500));
   
-  const strengths = [
-    'Provided clear, concise answers to most questions',
-    'Demonstrated strong technical knowledge',
-    'Used specific examples to illustrate points'
-  ];
-  
-  const improvements = [
-    'Could provide more quantifiable achievements',
-    'Consider shorter responses for some questions',
-    'Add more details about teamwork and collaboration'
-  ];
-  
-  // Calculate overall score based on answer patterns
-  let totalScore = 0;
-  const minScore = 60;
-  const maxScore = 95;
-  
-  // Check for answer completeness and length
-  answers.forEach(answer => {
-    // Add points for answer length (not too short, not too long)
-    const wordCount = answer.split(/\s+/).length;
-    if (wordCount > 30 && wordCount < 200) {
-      totalScore += 5;
-    } else if (wordCount >= 200) {
-      totalScore += 3;
-    } else {
-      totalScore += 1;
-    }
-    
-    // Add points for specific keywords (simplified)
-    if (answer.match(/experience|skill|project|team|collaborate|solve|develop/gi)) {
-      totalScore += 3;
-    }
-  });
-  
-  // Scale to appropriate range
-  const scaledScore = Math.min(maxScore, Math.max(minScore, 60 + totalScore));
-  
-  // Save report to Supabase if needed
-  // await supabase.from('interview_reports').insert({
-  //   role_id: roleId,
-  //   questions,
-  //   answers,
-  //   strengths,
-  //   improvements,
-  //   overall_score: scaledScore,
-  // });
-  
-  return {
-    strengths,
-    improvements,
-    overallScore: scaledScore,
-    interviewDate: new Date().toISOString()
-  };
-};
-
-// Process and extract text from uploaded resume
-export const extractResumeText = async (file: File): Promise<string> => {
-  if (!file) return '';
-  
-  try {
-    // For PDF files, we would use a PDF extraction library in a real app
-    // Here we'll simulate by reading the file as text
-    
-    // Read file as text
-    const text = await file.text();
-    
-    // Simple extraction of plain text (in a real app, we'd use more sophisticated extraction)
-    return text;
-  } catch (error) {
-    console.error('Error extracting resume text:', error);
-    return '';
-  }
-};
-
-// Calculate the average scores from a list of answers
-export const calculateAverageScores = (answers: any[]) => {
-  if (!answers || answers.length === 0) {
-    return {
-      clarity: 0,
-      relevance: 0,
-      confidence: 0,
-      grammar: 0,
-      overall: 0,
-    };
-  }
-
-  // Calculate the sum of each score type
-  const totals = answers.reduce(
-    (acc, answer) => {
-      if (answer?.feedback?.scores) {
-        acc.clarity += answer.feedback.scores.clarity || 0;
-        acc.relevance += answer.feedback.scores.relevance || 0;
-        acc.confidence += answer.feedback.scores.confidence || 0;
-        acc.grammar += answer.feedback.scores.grammar || 0;
-        acc.count += 1;
-      }
-      return acc;
-    },
-    { clarity: 0, relevance: 0, confidence: 0, grammar: 0, count: 0 }
+  const numQuestions = 5;
+  const questions = Array.from({ length: numQuestions }, () =>
+    faker.lorem.sentence() + ' ' + faker.lorem.sentence()
   );
+  
+  return questions;
+}
 
-  // Calculate the average scores
-  const count = totals.count || 1; // Avoid division by zero
-  const averageScores = {
-    clarity: Math.round((totals.clarity / count) * 10) / 10,
-    relevance: Math.round((totals.relevance / count) * 10) / 10,
-    confidence: Math.round((totals.confidence / count) * 10) / 10,
-    grammar: Math.round((totals.grammar / count) * 10) / 10,
+// Mock generate feedback
+export async function generateFeedback(question: string, answer: string, roleId: number): Promise<any> {
+  console.log("Generating feedback for role:", roleId, "question:", question, "answer:", answer);
+  
+  // Simulate delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Mock feedback
+  const feedback = faker.lorem.paragraph();
+
+  // Adjust the structure of scoreData to match what the component expects
+  const scoreData = {
+    feedback: feedback,
+    scores: {
+      clarity: Math.round(Math.random() * 40) + 60,
+      relevance: Math.round(Math.random() * 40) + 60,
+      confidence: Math.round(Math.random() * 40) + 60,
+      grammar: Math.round(Math.random() * 40) + 60
+    },
   };
 
-  // Calculate overall average
-  const overall =
-    Math.round(
-      ((averageScores.clarity +
-        averageScores.relevance +
-        averageScores.confidence +
-        averageScores.grammar) /
-        4) *
-        10
-    ) / 10;
+  return scoreData;
+}
 
-  return {
-    ...averageScores,
-    overall,
+// Mock generate report from all answers
+export async function generateReport(questions: string[], answers: string[], roleId: number) {
+  console.log("Generating report for role:", roleId);
+  
+  // Simulate delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Mock strengths and improvements
+  const strengths = Array.from({ length: 2 }, () => faker.lorem.sentence());
+  const improvements = Array.from({ length: 2 }, () => faker.lorem.sentence());
+  
+  // Mock feedback
+  const feedback = {
+    scores: {
+      clarity: Math.round(Math.random() * 40) + 60,
+      relevance: Math.round(Math.random() * 40) + 60,
+      confidence: Math.round(Math.random() * 40) + 60,
+      grammar: Math.round(Math.random() * 40) + 60
+    }
   };
-};
+
+  // Make sure we're returning data with the structure expected by Report.tsx
+  const reportData = {
+    strengths: strengths,
+    improvements: improvements,
+    overallScore: Math.round(
+      (
+        feedback.scores.clarity +
+        feedback.scores.relevance +
+        feedback.scores.confidence +
+        feedback.scores.grammar
+      ) / 4
+    ),
+    interviewDate: new Date().toISOString(),
+    scores: feedback.scores
+  };
+
+  return reportData;
+}

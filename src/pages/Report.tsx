@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ import {
 } from 'lucide-react';
 import { generatePdfReport } from '@/utils/pdfGenerator';
 import { useToast } from '@/components/ui/use-toast';
+import { saveInterviewData, getCurrentUser } from '@/utils/supabase';
 
 interface ReportData {
   strengths: string[];
@@ -43,6 +43,40 @@ const Report = () => {
   }
   
   const { report, jobRole, questions, answers } = state;
+
+  useEffect(() => {
+    const saveReport = async () => {
+      try {
+        const user = await getCurrentUser();
+        
+        if (user) {
+          // Prepare data for saving
+          const interviewData = {
+            user_id: user.id,
+            role_title: jobRole,
+            questions: questions,
+            answers: answers,
+            feedback: JSON.stringify(report.strengths.concat(report.improvements)),
+            scores: report.scores,
+            overall_score: report.overallScore
+          };
+          
+          // Save to Supabase
+          const result = await saveInterviewData(interviewData);
+          
+          if (result) {
+            console.log('Interview saved successfully:', result);
+          } else {
+            console.error('Failed to save interview data');
+          }
+        }
+      } catch (error) {
+        console.error('Error saving report:', error);
+      }
+    };
+    
+    saveReport();
+  }, [jobRole, questions, answers, report]);
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

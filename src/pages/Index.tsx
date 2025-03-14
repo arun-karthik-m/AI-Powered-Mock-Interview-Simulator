@@ -1,13 +1,23 @@
-
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Sparkles, BarChart, Users, Brain, Clock } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
 import FeatureCard from '@/components/FeatureCard';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [demoOpen, setDemoOpen] = useState(false);
+  
   const features = [
     {
       icon: MessageSquare,
@@ -59,133 +69,101 @@ const Index = () => {
     }
   ];
 
+  const handleStartInterview = () => {
+    navigate('/setup');
+  };
+
+  const handleWatchDemo = () => {
+    setDemoOpen(true);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <main className="flex-grow">
-        <HeroSection />
-        
-        {/* Features Section */}
-        <section className="py-16 bg-white">
-          <div className="container px-4 sm:px-6 mx-auto max-w-7xl">
-            <div className="text-center mb-16 animate-fade-in">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">AI-Powered Interview Preparation</h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Our advanced AI technology simulates real interview experiences with personalized feedback to help you succeed.
+      <HeroSection 
+        onStartInterview={handleStartInterview}
+        onWatchDemo={handleWatchDemo}
+      />
+      
+      <section className="py-16 md:py-24 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Features That Set Us Apart</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <FeatureCard
+                key={index}
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
+        <DialogContent className="max-w-4xl w-full">
+          <DialogHeader>
+            <DialogTitle>Interview AI Demo</DialogTitle>
+            <DialogDescription>
+              Watch how our AI-powered interview platform works
+            </DialogDescription>
+          </DialogHeader>
+          <div className="aspect-video w-full bg-gray-100 rounded-md flex items-center justify-center">
+            <div className="text-center p-6">
+              <p className="text-lg font-medium text-gray-800 mb-2">Demo Video</p>
+              <p className="text-sm text-gray-600">
+                This is a placeholder for the demo video. In a real application, an embedded video would be displayed here.
               </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {features.map((feature, index) => (
-                <FeatureCard 
-                  key={index}
-                  icon={feature.icon} 
-                  title={feature.title} 
-                  description={feature.description} 
-                />
-              ))}
             </div>
           </div>
-        </section>
-        
-        {/* How It Works Section */}
-        <section className="py-16 bg-gray-50">
-          <div className="container px-4 sm:px-6 mx-auto max-w-7xl">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Get started with our simple three-step process
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="glass-card relative">
-                <div className="absolute -top-4 -left-4 h-10 w-10 rounded-full bg-interview-blue flex items-center justify-center">
-                  <span className="text-lg font-bold text-white">1</span>
-                </div>
-                <div className="text-center pt-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Select Your Job Role</h3>
-                  <p className="text-gray-600">Choose from various job roles and experience levels.</p>
-                </div>
-              </div>
-              
-              <div className="glass-card relative">
-                <div className="absolute -top-4 -left-4 h-10 w-10 rounded-full bg-interview-blue flex items-center justify-center">
-                  <span className="text-lg font-bold text-white">2</span>
-                </div>
-                <div className="text-center pt-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Practice with AI</h3>
-                  <p className="text-gray-600">Answer questions verbally or in text and get real-time feedback.</p>
-                </div>
-              </div>
-              
-              <div className="glass-card relative">
-                <div className="absolute -top-4 -left-4 h-10 w-10 rounded-full bg-interview-blue flex items-center justify-center">
-                  <span className="text-lg font-bold text-white">3</span>
-                </div>
-                <div className="text-center pt-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Receive Detailed Analysis</h3>
-                  <p className="text-gray-600">Get comprehensive feedback and improve with each practice session.</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex justify-center mt-12">
-              <Link to="/setup">
-                <Button className="bg-interview-blue hover:bg-interview-blue/90 text-white font-medium px-6 py-3 rounded-lg shadow-button">
-                  Start Your Interview Practice
-                </Button>
-              </Link>
-            </div>
+        </DialogContent>
+      </Dialog>
+      
+      <section className="py-16 bg-white">
+        <div className="container px-4 sm:px-6 mx-auto max-w-7xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">What Our Users Say</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Join thousands of job seekers who have improved their interview skills
+            </p>
           </div>
-        </section>
-        
-        {/* Testimonials */}
-        <section className="py-16 bg-white">
-          <div className="container px-4 sm:px-6 mx-auto max-w-7xl">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">What Our Users Say</h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Join thousands of job seekers who have improved their interview skills
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {testimonials.map((testimonial, index) => (
-                <div key={index} className="glass-card">
-                  <div className="flex flex-col h-full">
-                    <div className="flex-grow">
-                      <p className="text-gray-600 italic mb-4">"{testimonial.quote}"</p>
-                    </div>
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <p className="font-semibold text-gray-900">{testimonial.author}</p>
-                      <p className="text-sm text-gray-500">{testimonial.role}</p>
-                    </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <div key={index} className="glass-card">
+                <div className="flex flex-col h-full">
+                  <div className="flex-grow">
+                    <p className="text-gray-600 italic mb-4">"{testimonial.quote}"</p>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <p className="font-semibold text-gray-900">{testimonial.author}</p>
+                    <p className="text-sm text-gray-500">{testimonial.role}</p>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        </section>
-        
-        {/* CTA Section */}
-        <section className="py-16 bg-interview-blue">
-          <div className="container px-4 sm:px-6 mx-auto max-w-7xl">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-white mb-6">Ready to Ace Your Next Interview?</h2>
-              <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-                Start practicing today and gain the confidence to impress any interviewer.
-              </p>
-              <Link to="/setup">
-                <Button className="bg-white text-interview-blue hover:bg-blue-50 font-medium px-8 py-3 rounded-lg shadow-button text-lg">
-                  Get Started Free
-                </Button>
-              </Link>
-            </div>
+        </div>
+      </section>
+      
+      <section className="py-16 bg-interview-blue">
+        <div className="container px-4 sm:px-6 mx-auto max-w-7xl">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-white mb-6">Ready to Ace Your Next Interview?</h2>
+            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+              Start practicing today and gain the confidence to impress any interviewer.
+            </p>
+            <Link to="/setup">
+              <Button className="bg-white text-interview-blue hover:bg-blue-50 font-medium px-8 py-3 rounded-lg shadow-button text-lg">
+                Get Started Free
+              </Button>
+            </Link>
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
       
       <footer className="bg-gray-900 text-white py-12">
         <div className="container px-4 sm:px-6 mx-auto max-w-7xl">
