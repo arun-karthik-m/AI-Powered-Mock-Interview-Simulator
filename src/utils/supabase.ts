@@ -1,8 +1,19 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Interview data type to match database structure
+export interface InterviewData {
+  user_id?: string;
+  role_title: string;
+  questions?: any[];
+  answers?: any[];
+  feedback?: string;
+  scores?: any;
+  overall_score?: number;
+}
+
 // Real Supabase interactions
-export async function saveInterviewData(data: any) {
+export async function saveInterviewData(data: InterviewData) {
   try {
     const { data: result, error } = await supabase
       .from('interviews')
@@ -39,6 +50,22 @@ export async function getUserInterviews(userId: string) {
     console.error('Error in getUserInterviews:', error);
     return [];
   }
+}
+
+// Authentication helper functions
+export async function getCurrentUser() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
+
+export async function getCurrentSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session;
+}
+
+export async function signOut() {
+  const { error } = await supabase.auth.signOut();
+  return { error };
 }
 
 export { supabase };

@@ -1,10 +1,13 @@
 
-import React from 'react';
-import { ChevronRight, Play, Award, BarChart, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronRight, Play, Award, BarChart, Clock, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const HeroSection = () => {
+  const [demoOpen, setDemoOpen] = useState(false);
+
   return (
     <div className="relative overflow-hidden pt-24 pb-16 md:pt-32 md:pb-24">
       <div className="absolute inset-0 bg-gradient-hero -z-10"></div>
@@ -28,7 +31,11 @@ const HeroSection = () => {
                   <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </Link>
-              <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-6 py-3 rounded-lg flex items-center">
+              <Button 
+                variant="outline" 
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-6 py-3 rounded-lg flex items-center"
+                onClick={() => setDemoOpen(true)}
+              >
                 <Play className="mr-2 h-4 w-4 text-interview-blue" />
                 Watch Demo
               </Button>
@@ -105,6 +112,29 @@ const HeroSection = () => {
           </div>
         </div>
       </div>
+
+      {/* Demo Video Dialog */}
+      <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-gray-900">InterviewAI Demo</DialogTitle>
+            <DialogDescription>
+              Watch how InterviewAI can help you prepare for your next job interview.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+            <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center">
+              <div className="mb-4 text-interview-blue">
+                <Play size={48} />
+              </div>
+              <h3 className="text-xl font-medium text-gray-900 mb-2">Demo Video</h3>
+              <p className="text-gray-600">
+                This is a placeholder for the demo video. In a real application, this would contain an embedded video player showcasing the InterviewAI platform in action.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

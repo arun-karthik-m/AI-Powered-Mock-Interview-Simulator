@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 import { analyzeResponse, generateQuestionsFromResume } from './openAiService';
 
@@ -246,4 +245,57 @@ export const extractResumeText = async (file: File): Promise<string> => {
     console.error('Error extracting resume text:', error);
     return '';
   }
+};
+
+// Calculate the average scores from a list of answers
+export const calculateAverageScores = (answers: any[]) => {
+  if (!answers || answers.length === 0) {
+    return {
+      clarity: 0,
+      relevance: 0,
+      confidence: 0,
+      grammar: 0,
+      overall: 0,
+    };
+  }
+
+  // Calculate the sum of each score type
+  const totals = answers.reduce(
+    (acc, answer) => {
+      if (answer?.feedback?.scores) {
+        acc.clarity += answer.feedback.scores.clarity || 0;
+        acc.relevance += answer.feedback.scores.relevance || 0;
+        acc.confidence += answer.feedback.scores.confidence || 0;
+        acc.grammar += answer.feedback.scores.grammar || 0;
+        acc.count += 1;
+      }
+      return acc;
+    },
+    { clarity: 0, relevance: 0, confidence: 0, grammar: 0, count: 0 }
+  );
+
+  // Calculate the average scores
+  const count = totals.count || 1; // Avoid division by zero
+  const averageScores = {
+    clarity: Math.round((totals.clarity / count) * 10) / 10,
+    relevance: Math.round((totals.relevance / count) * 10) / 10,
+    confidence: Math.round((totals.confidence / count) * 10) / 10,
+    grammar: Math.round((totals.grammar / count) * 10) / 10,
+  };
+
+  // Calculate overall average
+  const overall =
+    Math.round(
+      ((averageScores.clarity +
+        averageScores.relevance +
+        averageScores.confidence +
+        averageScores.grammar) /
+        4) *
+        10
+    ) / 10;
+
+  return {
+    ...averageScores,
+    overall,
+  };
 };
