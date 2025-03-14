@@ -106,7 +106,8 @@ export const generatePdfReport = (data: ReportData) => {
     });
     
     // Add footer
-    const pageCount = doc.internal.getNumberOfPages();
+    // Fix: Using internal.pages.length instead of getNumberOfPages
+    const pageCount = doc.internal.pages.length - 1;
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(10);

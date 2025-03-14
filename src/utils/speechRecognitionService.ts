@@ -1,4 +1,12 @@
 
+// Add type declarations for the Web Speech API
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 interface SpeechRecognitionResult {
   transcript: string;
   isFinal: boolean;
@@ -87,4 +95,55 @@ const createSpeechRecognitionService = (): SpeechRecognitionService => {
   };
 };
 
+// Export the speech recognition service instance
 export const speechRecognitionService = createSpeechRecognitionService();
+
+// Add a React hook for using speech recognition
+import { useState, useEffect } from 'react';
+
+interface UseSpeechRecognitionReturn {
+  transcript: string;
+  listening: boolean;
+  resetTranscript: () => void;
+  browserSupportsSpeechRecognition: boolean;
+}
+
+export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
+  const [transcript, setTranscript] = useState('');
+  const [listening, setListening] = useState(false);
+  
+  useEffect(() => {
+    // Update listening state based on the service
+    setListening(speechRecognitionService.isListening());
+    
+    // Clean up listener on unmount
+    return () => {
+      if (speechRecognitionService.isListening()) {
+        speechRecognitionService.stopListening();
+      }
+    };
+  }, []);
+  
+  const resetTranscript = () => {
+    setTranscript('');
+  };
+
+  return {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition: speechRecognitionService.isSupported()
+  };
+};
+
+// Export the functions for starting and stopping listening
+export const startListening = () => {
+  speechRecognitionService.startListening((result) => {
+    // This will be managed by the component using the hook
+    console.log('Speech recognition result:', result);
+  });
+};
+
+export const stopListening = () => {
+  speechRecognitionService.stopListening();
+};
