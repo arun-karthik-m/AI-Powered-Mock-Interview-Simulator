@@ -129,3 +129,25 @@ export const generatePdfReport = (data: ReportData) => {
     return false;
   }
 };
+
+// Add the downloadPdf function that's expected by Report.tsx
+export const downloadPdf = (
+  reportData: any,
+  jobRole: string,
+  questions: string[],
+  answers: string[]
+) => {
+  // Prepare the data in the format expected by generatePdfReport
+  const pdfData: ReportData = {
+    jobRole,
+    interviewDate: reportData.interviewDate,
+    overallScore: reportData.overallScore,
+    strengths: reportData.strengths,
+    improvements: reportData.improvements,
+    questions,
+    answers
+  };
+  
+  // Call the existing function to generate the PDF
+  return generatePdfReport(pdfData);
+};
