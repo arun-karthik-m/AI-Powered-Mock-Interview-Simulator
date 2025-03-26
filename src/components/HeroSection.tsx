@@ -90,8 +90,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onStartInterview, onWatchDemo
                 alt="Interview simulation"
                 className="w-full object-cover object-center"
                 height="650"
-                src="/placeholder.svg"
                 width="650"
+                src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2000&q=80"
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-interview-blue/20 to-transparent"></div>
             </div>
