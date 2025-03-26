@@ -25,13 +25,15 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navbar />
       
-      <HeroSection 
-        onStartInterview={handleStartInterview}
-        onWatchDemo={handleWatchDemo}
-      />
+      <main className="pt-16"> {/* Add padding-top to account for the fixed navbar */}
+        <HeroSection 
+          onStartInterview={handleStartInterview}
+          onWatchDemo={handleWatchDemo}
+        />
+      </main>
       
       <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
         <DialogContent className="max-w-4xl w-full">
