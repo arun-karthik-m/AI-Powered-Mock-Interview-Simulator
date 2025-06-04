@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Sparkles, Star, TrendingUp, AlertCircle, BarChart2, MessageCircle, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
@@ -20,9 +19,14 @@ interface FeedbackScores {
 interface FeedbackPanelProps {
   feedback: FeedbackItem[];
   scores: FeedbackScores;
+  structuredFeedback?: {
+    strengths: string[];
+    weaknesses: string[];
+    suggestion: string;
+  };
 }
 
-const FeedbackPanel: React.FC<FeedbackPanelProps> = ({ feedback, scores }) => {
+const FeedbackPanel: React.FC<FeedbackPanelProps> = ({ feedback, scores, structuredFeedback }) => {
   const getScoreColor = (score: number) => {
     if (score >= 8) return 'text-interview-success';
     if (score >= 6) return 'text-interview-warning';
@@ -120,18 +124,7 @@ const FeedbackPanel: React.FC<FeedbackPanelProps> = ({ feedback, scores }) => {
                     cx="64"
                     cy="64"
                   />
-                  <circle
-                    className={`${scores.overall >= 80 ? 'text-interview-success' : scores.overall >= 60 ? 'text-interview-warning' : 'text-interview-error'}`}
-                    strokeWidth="6"
-                    strokeDasharray={360}
-                    strokeDashoffset={360 - (360 * scores.overall) / 100}
-                    strokeLinecap="round"
-                    stroke="currentColor"
-                    fill="transparent"
-                    r="58"
-                    cx="64"
-                    cy="64"
-                  />
+                  {/* Removed colored progress arc for overall score */}
                 </svg>
                 <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-gray-800">
                   {scores.overall}
@@ -146,29 +139,65 @@ const FeedbackPanel: React.FC<FeedbackPanelProps> = ({ feedback, scores }) => {
         </div>
       </div>
       
-      <div className="space-y-4">
-        <h4 className="text-sm font-semibold text-gray-700">Detailed Feedback</h4>
-        
-        {feedback.map((item, index) => (
-          <div key={index} className="glass-morphism p-4 rounded-lg hover:shadow-md transition-shadow duration-200">
-            <div className="flex items-start">
-              <div className="flex-shrink-0 mt-1">
-                {item.type === 'strength' && <Star className="h-5 w-5 text-interview-success" />}
-                {item.type === 'improvement' && <TrendingUp className="h-5 w-5 text-interview-warning" />}
-                {item.type === 'suggestion' && <AlertCircle className="h-5 w-5 text-interview-error" />}
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-semibold text-gray-800 mb-1">
-                  {item.type === 'strength' && 'Strength'}
-                  {item.type === 'improvement' && 'Area for Improvement'}
-                  {item.type === 'suggestion' && 'Suggestion'}
-                </p>
-                <p className="text-sm text-gray-600">{item.content}</p>
+      {structuredFeedback && (
+        <div className="mt-8 space-y-4">
+          {structuredFeedback.strengths.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-green-700 mb-1">Strengths</h4>
+              <ul className="list-disc ml-6 text-sm text-gray-800">
+                {structuredFeedback.strengths.map((point, idx) => (
+                  <li key={idx}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {structuredFeedback.weaknesses.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-yellow-700 mb-1">Areas for Improvement</h4>
+              <ul className="list-disc ml-6 text-sm text-gray-800">
+                {structuredFeedback.weaknesses.map((point, idx) => (
+                  <li key={idx}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {structuredFeedback.suggestion && (
+            <div>
+              <h4 className="text-sm font-semibold text-blue-700 mb-1">Suggestion</h4>
+              <p className="text-sm text-gray-800 ml-2">{structuredFeedback.suggestion}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {(!structuredFeedback || (
+        structuredFeedback.strengths.length === 0 &&
+        structuredFeedback.weaknesses.length === 0 &&
+        !structuredFeedback.suggestion
+      )) && (
+        <div className="space-y-4">
+          <h4 className="text-sm font-semibold text-gray-700">Detailed Feedback</h4>
+          {feedback.map((item, index) => (
+            <div key={index} className="glass-morphism p-4 rounded-lg hover:shadow-md transition-shadow duration-200">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 mt-1">
+                  {item.type === 'strength' && <Star className="h-5 w-5 text-interview-success" />}
+                  {item.type === 'improvement' && <TrendingUp className="h-5 w-5 text-interview-warning" />}
+                  {item.type === 'suggestion' && <AlertCircle className="h-5 w-5 text-interview-error" />}
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-semibold text-gray-800 mb-1">
+                    {item.type === 'strength' && 'Strength'}
+                    {item.type === 'improvement' && 'Area for Improvement'}
+                    {item.type === 'suggestion' && 'Suggestion'}
+                  </p>
+                  <p className="text-sm text-gray-600">{item.content}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

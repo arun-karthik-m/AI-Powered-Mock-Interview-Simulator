@@ -1,3 +1,4 @@
+// This file is now deprecated. All OpenAI logic has been replaced by Gemini (see geminiService.ts).
 
 import OpenAI from 'openai';
 

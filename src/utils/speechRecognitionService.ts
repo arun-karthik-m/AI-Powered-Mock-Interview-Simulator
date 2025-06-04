@@ -1,4 +1,3 @@
-
 // Add type declarations for the Web Speech API
 declare global {
   interface Window {
@@ -24,7 +23,7 @@ interface SpeechRecognitionService {
 }
 
 // Create a mock or real speech recognition service based on browser support
-const createSpeechRecognitionService = (): SpeechRecognitionService => {
+const createSpeechRecognitionService = (): SpeechRecognitionService & { setExternalCallback?: (cb: SpeechRecognitionCallback | null) => void } => {
   // Check if the browser supports the Web Speech API
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   
@@ -35,13 +34,15 @@ const createSpeechRecognitionService = (): SpeechRecognitionService => {
       startListening: () => console.warn('Speech recognition not supported'),
       stopListening: () => console.warn('Speech recognition not supported'),
       isListening: () => false,
-      isSupported: () => false
+      isSupported: () => false,
+      setExternalCallback: () => {},
     };
   }
   
   // Create a real speech recognition service
   let recognition: any = null;
   let isCurrentlyListening = false;
+  let externalCallback: SpeechRecognitionCallback | null = null;
   
   return {
     startListening: (callback: SpeechRecognitionCallback) => {
@@ -63,9 +64,11 @@ const createSpeechRecognitionService = (): SpeechRecognitionService => {
           if (event.results[i].isFinal) {
             finalTranscript += transcript;
             callback({ transcript: finalTranscript, isFinal: true });
+            if (externalCallback) externalCallback({ transcript: finalTranscript, isFinal: true });
           } else {
             interimTranscript += transcript;
             callback({ transcript: interimTranscript, isFinal: false });
+            if (externalCallback) externalCallback({ transcript: interimTranscript, isFinal: false });
           }
         }
       };
@@ -91,7 +94,9 @@ const createSpeechRecognitionService = (): SpeechRecognitionService => {
     
     isListening: () => isCurrentlyListening,
     
-    isSupported: () => true
+    isSupported: () => true,
+    
+    setExternalCallback: (cb: SpeechRecognitionCallback | null) => { externalCallback = cb; },
   };
 };
 
@@ -99,7 +104,7 @@ const createSpeechRecognitionService = (): SpeechRecognitionService => {
 export const speechRecognitionService = createSpeechRecognitionService();
 
 // Add a React hook for using speech recognition
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface UseSpeechRecognitionReturn {
   transcript: string;
@@ -111,16 +116,17 @@ interface UseSpeechRecognitionReturn {
 export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
   const [transcript, setTranscript] = useState('');
   const [listening, setListening] = useState(false);
+  const callbackRef = useRef<SpeechRecognitionCallback | null>(null);
   
   useEffect(() => {
-    // Update listening state based on the service
-    setListening(speechRecognitionService.isListening());
-    
-    // Clean up listener on unmount
+    // Register callback to update transcript
+    callbackRef.current = (result: SpeechRecognitionResult) => {
+      setTranscript(result.transcript);
+      setListening(speechRecognitionService.isListening());
+    };
+    speechRecognitionService.setExternalCallback?.(callbackRef.current);
     return () => {
-      if (speechRecognitionService.isListening()) {
-        speechRecognitionService.stopListening();
-      }
+      speechRecognitionService.setExternalCallback?.(null);
     };
   }, []);
   
@@ -136,11 +142,9 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
   };
 };
 
-// Export the functions for starting and stopping listening
 export const startListening = () => {
   speechRecognitionService.startListening((result) => {
-    // This will be managed by the component using the hook
-    console.log('Speech recognition result:', result);
+    // No-op: actual state update handled by hook callback
   });
 };
 

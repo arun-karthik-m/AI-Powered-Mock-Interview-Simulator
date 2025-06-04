@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -50,6 +49,10 @@ const Setup = () => {
     if (savedName) {
       setUserName(savedName);
     }
+    // Clean up user name in localStorage when Setup unmounts
+    return () => {
+      localStorage.removeItem('interview_user_name');
+    };
   }, []);
 
   const handleRoleChange = (value: string) => {
@@ -147,7 +150,7 @@ const Setup = () => {
       // Navigate to interview page with selected role ID and resume text
       navigate(`/interview/${selectedRole}`, { 
         state: { 
-          resumeText 
+          resumeText: resumeText // Pass resumeText to Interview page
         } 
       });
     }, 1500);

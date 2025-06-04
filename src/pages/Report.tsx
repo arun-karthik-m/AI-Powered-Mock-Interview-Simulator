@@ -1,19 +1,9 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from 'recharts';
 import { Progress } from '@/components/ui/progress';
 import { downloadPdf } from '@/utils/pdfGenerator';
 import { saveInterviewData } from '@/utils/supabase';
@@ -33,6 +23,11 @@ interface ReportData {
   overallScore: number;
   interviewDate: string;
   scores: Scores;
+  structuredFeedback?: {
+    strengths: string[];
+    weaknesses: string[];
+    suggestion: string;
+  };
 }
 
 const Report = () => {
@@ -55,6 +50,9 @@ const Report = () => {
       return;
     }
 
+    // Scroll to top when viewing the report
+    window.scrollTo({ top: 0, behavior: 'auto' });
+
     // Get current user
     const getUser = async () => {
       const currentUser = await getCurrentUser();
@@ -63,26 +61,6 @@ const Report = () => {
 
     getUser();
   }, [reportData, navigate]);
-
-  // Format chart data
-  const chartData = [
-    {
-      name: 'Clarity',
-      score: reportData?.scores?.clarity || 0
-    },
-    {
-      name: 'Relevance',
-      score: reportData?.scores?.relevance || 0
-    },
-    {
-      name: 'Confidence',
-      score: reportData?.scores?.confidence || 0
-    },
-    {
-      name: 'Grammar',
-      score: reportData?.scores?.grammar || 0
-    }
-  ];
 
   const handleSaveResults = async () => {
     if (!user) {
@@ -146,10 +124,33 @@ const Report = () => {
     });
   };
 
+  // Helper to get strengths, improvements, and suggestion from structuredFeedback if present
+  const getStrengths = () => {
+    if (reportData?.structuredFeedback?.strengths?.length) return reportData.structuredFeedback.strengths;
+    return reportData?.strengths || [];
+  };
+  const getImprovements = () => {
+    if (reportData?.structuredFeedback?.weaknesses?.length) return reportData.structuredFeedback.weaknesses;
+    return reportData?.improvements || [];
+  };
+  const getSuggestion = () => {
+    if (reportData?.structuredFeedback?.suggestion) return reportData.structuredFeedback.suggestion;
+    return '';
+  };
+
+  // --- Average per-answer scores for overall performance ---
+  // If available, use the individual answer scores for averaging
+  const perAnswerScores = location.state?.answerScores as number[] | undefined;
+  let averagedOverallScore = reportData?.overallScore || 0;
+  if (perAnswerScores && perAnswerScores.length > 0) {
+    const sum = perAnswerScores.reduce((acc, val) => acc + val, 0);
+    averagedOverallScore = Math.round((sum / perAnswerScores.length) * 10) / 10;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+      <div className="h-8" /> {/* Spacer to push report below navbar */}
       <main className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 max-w-6xl">
         <div className="space-y-10">
           {/* Header */}
@@ -197,114 +198,58 @@ const Report = () => {
                 <h2 className="text-xl font-semibold">Overall Performance</h2>
                 <p className="text-gray-500">Your interview score based on all responses</p>
               </div>
-              
               <div className="flex flex-col items-center">
                 <div className="relative w-48 h-48 flex items-center justify-center rounded-full border-8 border-gray-100">
                   <div className="absolute inset-0 rounded-full overflow-hidden">
                     <div 
                       className="absolute inset-0 rounded-full bg-blue-500 opacity-10"
                       style={{ 
-                        clipPath: `inset(${100 - (reportData?.overallScore || 0)}% 0 0 0)` 
+                        clipPath: `inset(${100 - ((averagedOverallScore || 0) * 10)}% 0 0 0)` 
                       }}
                     ></div>
                   </div>
-                  <div className="text-center">
-                    <span className="block text-5xl font-bold text-gray-900">{reportData?.overallScore || 0}</span>
-                    <span className="block text-sm text-gray-500 mt-1">out of 100</span>
-                  </div>
+                  <span className="text-5xl font-bold text-blue-600 z-10">
+                    {averagedOverallScore || 0}
+                  </span>
+                  <span className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-gray-400 font-medium">
+                    out of 10
+                  </span>
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          {/* Performance Metrics */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-semibold mb-6">Performance Metrics</h2>
-                
-                <div className="space-y-5">
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span>Clarity</span>
-                      <span>{reportData?.scores?.clarity || 0}%</span>
-                    </div>
-                    <Progress value={reportData?.scores?.clarity || 0} className="h-2" />
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span>Relevance</span>
-                      <span>{reportData?.scores?.relevance || 0}%</span>
-                    </div>
-                    <Progress value={reportData?.scores?.relevance || 0} className="h-2" />
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span>Confidence</span>
-                      <span>{reportData?.scores?.confidence || 0}%</span>
-                    </div>
-                    <Progress value={reportData?.scores?.confidence || 0} className="h-2" />
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span>Grammar</span>
-                      <span>{reportData?.scores?.grammar || 0}%</span>
-                    </div>
-                    <Progress value={reportData?.scores?.grammar || 0} className="h-2" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-semibold mb-6">Score Breakdown</h2>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={chartData}
-                      margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="name" />
-                      <YAxis domain={[0, 100]} />
-                      <Tooltip />
-                      <Bar dataKey="score" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
           {/* Feedback */}
           <Card>
             <CardContent className="pt-6">
               <h2 className="text-xl font-semibold mb-6">Detailed Feedback</h2>
-              
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-medium text-green-600 mb-3">Strengths</h3>
                   <ul className="list-disc pl-5 space-y-2">
-                    {reportData?.strengths.map((strength, index) => (
+                    {getStrengths().map((strength, index) => (
                       <li key={index} className="text-gray-700">{strength}</li>
                     ))}
                   </ul>
                 </div>
-                
                 <Separator />
-                
                 <div>
                   <h3 className="text-lg font-medium text-amber-600 mb-3">Areas for Improvement</h3>
                   <ul className="list-disc pl-5 space-y-2">
-                    {reportData?.improvements.map((improvement, index) => (
+                    {getImprovements().map((improvement, index) => (
                       <li key={index} className="text-gray-700">{improvement}</li>
                     ))}
                   </ul>
                 </div>
+                {getSuggestion() && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h3 className="text-lg font-medium text-blue-600 mb-3">Suggestion</h3>
+                      <p className="text-gray-700 pl-2">{getSuggestion()}</p>
+                    </div>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>

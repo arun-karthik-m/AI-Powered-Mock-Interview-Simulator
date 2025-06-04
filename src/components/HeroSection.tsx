@@ -1,16 +1,14 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Brain, Play } from 'lucide-react';
+import { ArrowRight, Brain } from 'lucide-react';
 
 interface HeroSectionProps {
   onStartInterview?: () => void;
-  onWatchDemo?: () => void;
 }
 
-const HeroSection: React.FC<HeroSectionProps> = ({ onStartInterview, onWatchDemo }) => {
+const HeroSection: React.FC<HeroSectionProps> = ({ onStartInterview }) => {
   return (
-    <section className="py-16 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-white to-gray-50">
+    <section className="min-h-screen flex items-start justify-center bg-gradient-to-b from-white to-gray-50 px-4 pt-16">
       <div className="container px-4 md:px-6">
         <div className="grid gap-8 lg:grid-cols-[1fr_500px] lg:gap-12 xl:grid-cols-[1fr_600px] items-center">
           <div className="flex flex-col justify-center space-y-6">
@@ -36,15 +34,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onStartInterview, onWatchDemo
               >
                 Start Practice Interview
                 <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button 
-                onClick={onWatchDemo} 
-                variant="outline"
-                className="w-full md:w-auto border-gray-300 text-gray-700 px-8 py-6 h-auto"
-                size="lg"
-              >
-                <Play className="mr-2 h-5 w-5" />
-                Watch Demo
               </Button>
             </div>
             

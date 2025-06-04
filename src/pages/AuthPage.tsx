@@ -30,7 +30,7 @@ const AuthPage = () => {
         
         toast({
           title: "Account created successfully",
-          description: "Please check your email for the confirmation link.",
+          description: "Please Signin.",
         });
       } else {
         const { error } = await supabase.auth.signInWithPassword({
