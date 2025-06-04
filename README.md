@@ -13,8 +13,6 @@
 
 AI-Powered Interview Preparation Platform is a cutting-edge application designed to help job seekers practice and improve their interview skills using artificial intelligence. The platform provides a realistic interview experience with role-specific questions, real-time feedback, and detailed performance analytics.
 
-![Interview Platform Dashboard](https://via.placeholder.com/1200x600/1e293b/ffffff?text=AI+Interview+Platform+Dashboard)
-
 ## ✨ Features
 
 - **Role-Specific Interviews**: Practice with questions tailored to specific job roles and seniority levels
